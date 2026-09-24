@@ -15,13 +15,17 @@ import studentAttemptRoutes from './routes/student-attempt.routes.js'
 import scheduleRoutes from './routes/schedule.routes.js'
 import adminMonitoringRoutes from './routes/admin-monitoring.routes.js'
 import teacherMonitoringRoutes from './routes/teacher-monitoring.routes.js'
+import uploadRoutes from './routes/upload.routes.js'
 import { errorHandler } from './middleware/error.middleware.js'
 import { response } from './utils/response.js'
+import path from 'path'
 
 const app = express()
 
 // ─── Security ────────────────────────────────────────────────────────────────
-app.use(helmet())
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}))
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
 app.use(
@@ -34,10 +38,12 @@ app.use(
 )
 
 // ─── Body Parser ─────────────────────────────────────────────────────────────
-app.use(express.json())
-app.use(express.urlencoded({ extended: false }))
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: false, limit: '10mb' }))
 
 // ─── API Routes ──────────────────────────────────────────────────────────────
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
+
 app.use('/api/auth', authRoutes)
 app.use('/api/student/auth', studentAuthRoutes)
 app.use('/api/student/exams', studentExamRoutes)
@@ -51,6 +57,7 @@ app.use('/api/admin/student-accounts', studentAccountRoutes)
 app.use('/api/admin/schedules', scheduleRoutes)
 app.use('/api/admin/monitoring', adminMonitoringRoutes)
 app.use('/api/teacher/monitoring', teacherMonitoringRoutes)
+app.use('/api/upload', uploadRoutes)
 
 // ─── Health Check ────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

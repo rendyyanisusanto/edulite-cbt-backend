@@ -1,5 +1,5 @@
 import mysql from 'mysql2/promise'
-import env from './src/config/env.js'
+import { env } from './src/config/env.js'
 
 async function run() {
   const connection = await mysql.createConnection({
@@ -7,7 +7,7 @@ async function run() {
     port: env.db.port,
     user: env.db.user,
     password: env.db.password,
-    database: env.db.database
+    database: env.db.name
   })
 
   try {

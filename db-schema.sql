@@ -446,7 +446,6 @@ CREATE TABLE `cbt_activity_logs` (
   KEY `idx_cbt_logs_attempt_time` (`attempt_id`,`created_at`) USING BTREE,
   KEY `idx_cbt_logs_event_time` (`event_type`,`created_at`) USING BTREE,
   KEY `idx_cbt_logs_user` (`user_id`) USING BTREE,
-  CONSTRAINT `fk_cbt_logs_attempt` FOREIGN KEY (`attempt_id`) REFERENCES `cbt_attempts` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_cbt_logs_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
+  CONSTRAINT `fk_cbt_logs_attempt` FOREIGN KEY (`attempt_id`) REFERENCES `cbt_attempts` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC;
 

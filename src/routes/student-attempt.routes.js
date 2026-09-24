@@ -506,7 +506,7 @@ router.post('/:attemptId/submit', requireStudent, async (req, res, next) => {
     // Activity Log
     await connection.query(
       `INSERT INTO cbt_activity_logs (attempt_id, user_id, event_type, description) VALUES (?, ?, ?, ?)`,
-      [attemptId, req.student.sub, finalStatus, isExpired ? 'Waktu ujian telah habis dan otomatis diselesaikan' : 'Siswa mengakhiri dan mengumpulkan jawaban ujian']
+      [attemptId, null, finalStatus, isExpired ? 'Waktu ujian telah habis dan otomatis diselesaikan' : 'Siswa mengakhiri dan mengumpulkan jawaban ujian']
     );
 
     await connection.commit();

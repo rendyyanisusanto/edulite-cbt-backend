@@ -495,7 +495,7 @@ router.post('/:scheduleId/start', requireStudent, async (req, res, next) => {
     await connection.query(
       `INSERT INTO cbt_activity_logs (attempt_id, user_id, event_type, description, metadata, ip_address)
        VALUES (?, ?, 'EXAM_STARTED', 'Student started exam attempt', ?, ?)`,
-      [attemptId, req.student.sub, JSON.stringify({ attemptNumber }), req.ip]
+      [attemptId, null, JSON.stringify({ attemptNumber }), req.ip]
     );
 
     await connection.commit();

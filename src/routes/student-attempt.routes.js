@@ -223,7 +223,7 @@ router.get('/:attemptId/questions', requireStudent, async (req, res, next) => {
     let options = [];
     if (choiceQuestionIds.length > 0) {
       const [loadedOptions] = await pool.query(`
-        SELECT id, exam_question_id, option_key, option_text
+        SELECT id, exam_question_id, option_key, option_text, media_url
         FROM cbt_exam_question_options
         WHERE exam_question_id IN (?)
       `, [choiceQuestionIds]);
@@ -242,7 +242,8 @@ router.get('/:attemptId/questions', requireStudent, async (req, res, next) => {
       if (q.question_type === 'SINGLE_CHOICE') {
         const qOptions = options.filter(o => o.exam_question_id === q.id).map(o => ({
           id: o.id,
-          text: o.option_text
+          text: o.option_text,
+          mediaUrl: o.media_url
         }));
 
         if (shuffle_options) {

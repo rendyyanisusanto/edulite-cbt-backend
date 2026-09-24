@@ -11,19 +11,29 @@ async function run() {
   })
 
   try {
-    console.log('Dropping fk_cbt_logs_user constraint from cbt_activity_logs to allow polymorphic user_id...')
+    console.log('Finding foreign key constraint on cbt_activity_logs.user_id...')
     
-    await connection.execute(`
-      ALTER TABLE cbt_activity_logs DROP FOREIGN KEY fk_cbt_logs_user;
-    `)
-    
-    console.log('Success! Constraint dropped.')
-  } catch (err) {
-    if (err.code === 'ER_CANT_DROP_FIELD_OR_KEY') {
-      console.log('Foreign key fk_cbt_logs_user does not exist, skipping.')
+    const [rows] = await connection.execute(`
+      SELECT CONSTRAINT_NAME
+      FROM information_schema.KEY_COLUMN_USAGE
+      WHERE TABLE_SCHEMA = ?
+        AND TABLE_NAME = 'cbt_activity_logs'
+        AND COLUMN_NAME = 'user_id'
+        AND REFERENCED_TABLE_NAME IS NOT NULL
+    `, [env.db.name]);
+
+    if (rows.length === 0) {
+      console.log('No foreign key found on cbt_activity_logs.user_id. You are good to go!');
     } else {
-      console.error('Error:', err)
+      for (const row of rows) {
+        const fkName = row.CONSTRAINT_NAME;
+        console.log(`Found foreign key: ${fkName}. Dropping it...`);
+        await connection.execute(`ALTER TABLE cbt_activity_logs DROP FOREIGN KEY \`${fkName}\``);
+        console.log(`Successfully dropped ${fkName}.`);
+      }
     }
+  } catch (err) {
+    console.error('Error:', err)
   } finally {
     await connection.end()
   }

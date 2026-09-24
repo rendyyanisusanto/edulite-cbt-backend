@@ -42,7 +42,7 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: false, limit: '10mb' }))
 
 // ─── API Routes ──────────────────────────────────────────────────────────────
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
+app.use('/api/uploads', express.static(path.join(process.cwd(), 'uploads')))
 
 app.use('/api/auth', authRoutes)
 app.use('/api/student/auth', studentAuthRoutes)

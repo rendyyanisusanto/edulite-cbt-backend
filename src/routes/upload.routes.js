@@ -39,7 +39,7 @@ router.post('/image', authenticate, (req, res, next) => {
     fs.writeFileSync(filepath, data)
 
     // Return the absolute URL path
-    const url = `${req.protocol}://${req.get('host')}/uploads/${filename}`
+    const url = `${req.protocol}://${req.get('host')}/api/uploads/${filename}`
     
     response.success(res, { statusCode: 201, message: 'Image uploaded successfully', data: { url } })
   } catch (error) {

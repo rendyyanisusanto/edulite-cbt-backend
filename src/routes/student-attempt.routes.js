@@ -295,6 +295,7 @@ router.get('/:attemptId/questions', requireStudent, async (req, res, next) => {
         ans.id AS answerId,
         ans.exam_question_id,
         ans.answer_text,
+        ans.answer_file_url,
         ans.is_flagged,
         ans.version,
         ch.exam_question_option_id
@@ -314,6 +315,9 @@ router.get('/:attemptId/questions', requireStudent, async (req, res, next) => {
       }
       if (ans.answer_text !== null) {
         answersMap[ans.exam_question_id].answerText = ans.answer_text;
+      }
+      if (ans.answer_file_url !== null) {
+        answersMap[ans.exam_question_id].answerFileUrl = ans.answer_file_url;
       }
     }
 
@@ -335,7 +339,7 @@ router.put('/:attemptId/answers/:questionId', requireStudent, async (req, res, n
   try {
     const studentId = req.student.studentId;
     const { attemptId, questionId } = req.params;
-    const { selectedOptionId, answerText, isFlagged, version } = req.body;
+    const { selectedOptionId, answerText, answerFileUrl, isFlagged, version } = req.body;
 
     // 1. Validate Attempt
     const verifyQuery = `
@@ -389,24 +393,24 @@ router.put('/:attemptId/answers/:questionId', requireStudent, async (req, res, n
     if (questionType === 'SINGLE_CHOICE') {
       if (selectedOptionId) answeredAt = new Date();
     } else {
-      if (answerText && answerText.trim() !== '') answeredAt = new Date();
+      if ((answerText && answerText.trim() !== '') || answerFileUrl) answeredAt = new Date();
     }
 
     if (!answerId) {
       // INSERT
       const [insertRes] = await connection.query(
-        `INSERT INTO cbt_answers (attempt_id, exam_question_id, answer_text, is_flagged, answered_at, grading_status, version) 
-         VALUES (?, ?, ?, ?, ?, 'PENDING', ?)`,
-        [attemptId, questionId, questionType === 'ESSAY' ? answerText : null, isFlagged ? 1 : 0, answeredAt, newVersion]
+        `INSERT INTO cbt_answers (attempt_id, exam_question_id, answer_text, answer_file_url, is_flagged, answered_at, grading_status, version) 
+         VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?)`,
+        [attemptId, questionId, questionType === 'ESSAY' ? answerText : null, questionType === 'ESSAY' ? answerFileUrl : null, isFlagged ? 1 : 0, answeredAt, newVersion]
       );
       answerId = insertRes.insertId;
     } else {
       // UPDATE
       await connection.query(
         `UPDATE cbt_answers 
-         SET answer_text = ?, is_flagged = ?, answered_at = ?, version = ?
+         SET answer_text = ?, answer_file_url = ?, is_flagged = ?, answered_at = ?, version = ?
          WHERE id = ?`,
-        [questionType === 'ESSAY' ? answerText : null, isFlagged ? 1 : 0, answeredAt, newVersion, answerId]
+        [questionType === 'ESSAY' ? answerText : null, questionType === 'ESSAY' ? answerFileUrl : null, isFlagged ? 1 : 0, answeredAt, newVersion, answerId]
       );
     }
 

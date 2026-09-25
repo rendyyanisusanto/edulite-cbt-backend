@@ -54,3 +54,16 @@ export async function duplicateQuestion(req, res, next) {
     next(err)
   }
 }
+
+export async function cloneQuestions(req, res, next) {
+  try {
+    const { sourceAssignmentId } = req.body
+    if (!sourceAssignmentId) {
+      throw { status: 400, message: 'sourceAssignmentId is required' }
+    }
+    const data = await questionService.cloneQuestions(req.user.sub, req.params.assignmentId, sourceAssignmentId)
+    response.success(res, { statusCode: 201, message: 'Soal berhasil dikloning', data })
+  } catch(err) {
+    next(err)
+  }
+}

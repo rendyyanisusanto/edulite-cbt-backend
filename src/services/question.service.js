@@ -63,3 +63,10 @@ export async function duplicateQuestion(userId, id) {
   const newId = await questionRepo.duplicateQuestion(id)
   return await getQuestionById(userId, newId)
 }
+
+export async function cloneQuestions(userId, targetAssignmentId, sourceAssignmentId) {
+  await verifyOwnershipByAssignment(userId, targetAssignmentId)
+  await verifyOwnershipByAssignment(userId, sourceAssignmentId)
+  await questionRepo.cloneQuestions(targetAssignmentId, sourceAssignmentId)
+  return await getQuestionsByAssignmentId(userId, targetAssignmentId)
+}

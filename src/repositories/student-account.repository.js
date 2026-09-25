@@ -9,6 +9,7 @@ export async function getStudentAccounts(filters) {
       c.id as classId,
       c.name as className,
       a.username, 
+      a.plain_password as plainPassword,
       a.is_active as isActive, 
       a.last_login as lastLogin
     FROM students s
@@ -58,6 +59,7 @@ export async function getStudentAccounts(filters) {
     account: r.username ? {
       exists: true,
       username: r.username,
+      plainPassword: r.plainPassword,
       isActive: Boolean(r.isActive),
       lastLogin: r.lastLogin
     } : { exists: false }
@@ -97,18 +99,18 @@ export async function getAccountByUsername(username) {
 }
 
 export async function createAccount(data, userId) {
-  const { studentId, username, passwordHash } = data
+  const { studentId, username, passwordHash, plainPassword } = data
   const [result] = await pool.execute(`
-    INSERT INTO cbt_student_accounts (student_id, username, password_hash, created_by)
-    VALUES (?, ?, ?, ?)
-  `, [studentId, username, passwordHash, userId])
+    INSERT INTO cbt_student_accounts (student_id, username, password_hash, plain_password, created_by)
+    VALUES (?, ?, ?, ?, ?)
+  `, [studentId, username, passwordHash, plainPassword, userId])
   return result.insertId
 }
 
-export async function updatePassword(studentId, passwordHash) {
+export async function updatePassword(studentId, passwordHash, plainPassword) {
   await pool.execute(`
-    UPDATE cbt_student_accounts SET password_hash = ? WHERE student_id = ?
-  `, [passwordHash, studentId])
+    UPDATE cbt_student_accounts SET password_hash = ?, plain_password = ? WHERE student_id = ?
+  `, [passwordHash, plainPassword, studentId])
 }
 
 export async function updateStatus(studentId, isActive) {

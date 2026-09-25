@@ -261,3 +261,57 @@ export async function duplicateQuestion(id) {
     connection.release()
   }
 }
+
+export async function cloneQuestions(targetAssignmentId, sourceAssignmentId) {
+  const connection = await pool.getConnection()
+  try {
+    await connection.beginTransaction()
+
+    // Get max sort_order of target
+    const [rows] = await connection.execute(
+      'SELECT MAX(sort_order) as maxOrder FROM cbt_exam_questions WHERE exam_assignment_id = ?', 
+      [targetAssignmentId]
+    )
+    let currentSortOrder = (rows[0].maxOrder || 0)
+
+    // Get all questions from source
+    const [sourceQuestions] = await connection.execute(
+      'SELECT * FROM cbt_exam_questions WHERE exam_assignment_id = ? ORDER BY sort_order ASC, id ASC',
+      [sourceAssignmentId]
+    )
+
+    for (const q of sourceQuestions) {
+      currentSortOrder++
+
+      const [qResult] = await connection.execute(`
+        INSERT INTO cbt_exam_questions (
+          exam_assignment_id, question_type, question_text, media_url, 
+          answer_key, explanation, score, sort_order
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        targetAssignmentId, q.question_type, q.question_text, q.media_url, 
+        q.answer_key, q.explanation, q.score, currentSortOrder
+      ])
+      
+      const newId = qResult.insertId
+
+      if (q.question_type === 'SINGLE_CHOICE') {
+        const [options] = await connection.execute('SELECT * FROM cbt_exam_question_options WHERE exam_question_id = ? ORDER BY sort_order ASC', [q.id])
+        for(const opt of options) {
+          await connection.execute(`
+            INSERT INTO cbt_exam_question_options (
+              exam_question_id, option_key, option_text, media_url, is_correct, sort_order
+            ) VALUES (?, ?, ?, ?, ?, ?)
+          `, [newId, opt.option_key, opt.option_text, opt.media_url, opt.is_correct, opt.sort_order])
+        }
+      }
+    }
+
+    await connection.commit()
+  } catch (err) {
+    await connection.rollback()
+    throw err
+  } finally {
+    connection.release()
+  }
+}

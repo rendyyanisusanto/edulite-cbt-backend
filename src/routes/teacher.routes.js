@@ -15,6 +15,7 @@ router.get('/assignments/:id', teacherController.getTeacherAssignmentById)
 
 router.get('/assignments/:assignmentId/questions', questionController.getQuestionsByAssignmentId)
 router.post('/assignments/:assignmentId/questions', questionController.createQuestion)
+router.post('/assignments/:assignmentId/clone-questions', questionController.cloneQuestions)
 router.get('/questions/:id', questionController.getQuestionById)
 router.put('/questions/:id', questionController.updateQuestion)
 router.delete('/questions/:id', questionController.deleteQuestion)

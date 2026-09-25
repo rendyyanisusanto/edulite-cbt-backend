@@ -11,5 +11,6 @@ router.use(authenticate, allowRoles('ADMIN'))
 router.get('/', monitorController.getMonitoringSchedules)
 router.get('/:scheduleId', monitorController.getMonitoringDetail)
 router.get('/:scheduleId/participants/:participantId', monitorController.getParticipantDetail)
+router.post('/:scheduleId/participants/:participantId/reset-time', monitorController.resetParticipantTime)
 
 export default router

@@ -322,3 +322,50 @@ export async function getMonitoringParticipantDetail(scheduleId, participantId, 
 
   return { questions };
 }
+
+export async function resetParticipantTime(scheduleId, participantId, userId = null) {
+  const params = [scheduleId, participantId];
+  if (userId !== null) {
+    params.push(userId);
+  }
+
+  // 1. Verify access and get attempt info
+  const [rows] = await pool.query(`
+    SELECT 
+      cep.id AS participantId,
+      att.id AS attempt_id,
+      att.status AS attempt_status,
+      COALESCE(ces.duration_minutes, ce.duration_minutes) AS durationMinutes
+    FROM cbt_exam_participants cep
+    JOIN cbt_exam_schedules ces ON cep.schedule_id = ces.id
+    JOIN cbt_exam_assignments cea ON ces.exam_assignment_id = cea.id
+    JOIN cbt_exams ce ON cea.exam_id = ce.id
+    LEFT JOIN cbt_attempts att ON att.id = (
+      SELECT id FROM cbt_attempts 
+      WHERE participant_id = cep.id 
+      ORDER BY attempt_number DESC LIMIT 1
+    )
+    ${userId !== null ? 'JOIN teachers t ON cea.teacher_id = t.id' : ''}
+    WHERE ces.id = ? AND cep.id = ? ${userId !== null ? 'AND t.user_id = ?' : ''}
+  `, params);
+
+  if (rows.length === 0) {
+    throw { status: 404, message: 'Peserta tidak ditemukan atau Anda tidak memiliki akses.' };
+  }
+
+  const participant = rows[0];
+  if (!participant.attempt_id) {
+    throw { status: 400, message: 'Peserta belum memulai ujian.' };
+  }
+
+  // Update expires_at and status
+  const duration = participant.durationMinutes || 120; // fallback 120 min
+  await pool.query(`
+    UPDATE cbt_attempts 
+    SET expires_at = DATE_ADD(NOW(), INTERVAL ? MINUTE),
+        status = 'IN_PROGRESS'
+    WHERE id = ?
+  `, [duration, participant.attempt_id]);
+
+  return { message: 'Waktu ujian berhasil direset.' };
+}

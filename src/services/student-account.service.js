@@ -9,16 +9,17 @@ export async function getStudentAccounts(filters) {
 async function generateUsername(student) {
   if (student.nis) {
     const username = String(student.nis).trim()
-    const existing = await repo.getAccountByUsername(username)
-    if (!existing) return username
+    if (username !== '' && username !== '-') {
+      const existing = await repo.getAccountByUsername(username)
+      if (!existing) return username
+    }
   }
   
-  // Fallback if NIS doesn't exist or is duplicated (unlikely but possible)
-  let username = `STU${student.id}`
-  let counter = 1
+  // Fallback if NIS doesn't exist or is duplicated
+  // Generate random 8 digit number
+  let username = Math.floor(10000000 + Math.random() * 90000000).toString()
   while (await repo.getAccountByUsername(username)) {
-    username = `STU${student.id}${counter}`
-    counter++
+    username = Math.floor(10000000 + Math.random() * 90000000).toString()
   }
   return username
 }
@@ -62,7 +63,8 @@ export async function generateAccounts(payload, userId) {
     await repo.createAccount({
       studentId: student.id,
       username,
-      passwordHash
+      passwordHash,
+      plainPassword
     }, userId)
     
     generated.push({
@@ -90,7 +92,7 @@ export async function resetPassword(studentId) {
   const plainPassword = generateEduPassword()
   const passwordHash = await bcrypt.hash(plainPassword, 10)
   
-  await repo.updatePassword(studentId, passwordHash)
+  await repo.updatePassword(studentId, passwordHash, plainPassword)
   
   return {
     studentId,

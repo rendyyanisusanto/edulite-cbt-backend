@@ -35,7 +35,7 @@ export async function autoGradeObjective(attemptId) {
           SELECT id, is_correct FROM cbt_exam_question_options WHERE id IN (?)
         `, [optionIds]);
         options.forEach(opt => {
-          optionsMap[opt.id] = opt.is_correct === 1;
+          optionsMap[opt.id] = opt.is_correct == 1 || opt.is_correct === true || (Buffer.isBuffer(opt.is_correct) && opt.is_correct[0] === 1);
         });
       }
 
@@ -45,7 +45,7 @@ export async function autoGradeObjective(attemptId) {
         
         if (ans.exam_question_option_id && optionsMap[ans.exam_question_option_id]) {
           isCorrect = 1;
-          scoreAwarded = ans.question_score || 0;
+          scoreAwarded = Number(ans.question_score || 0);
         }
 
         await connection.query(`
@@ -169,7 +169,7 @@ async function recalculateAttemptScoreInternal(attemptId, connection) {
   const selectedQuestions = [...choiceQuestions, ...essayQuestions];
   let maximumPoints = 0;
   for (const q of selectedQuestions) {
-    maximumPoints += (q.score || 0);
+    maximumPoints += Number(q.score || 0);
   }
   
   // Now sum up answers
@@ -200,9 +200,9 @@ async function recalculateAttemptScoreInternal(attemptId, connection) {
     if (!ans || !ans.exam_question_option_id) {
       unansweredCount++;
     } else {
-      if (ans.is_correct === 1) {
+      if (ans.is_correct == 1 || ans.is_correct === true || (Buffer.isBuffer(ans.is_correct) && ans.is_correct[0] === 1)) {
         correctCount++;
-        objectivePoints += (ans.score_awarded || 0);
+        objectivePoints += Number(ans.score_awarded || 0);
       } else {
         wrongCount++;
       }
@@ -218,7 +218,7 @@ async function recalculateAttemptScoreInternal(attemptId, connection) {
     } else if (ans.grading_status === 'PENDING') {
       pendingEssays++;
     } else if (ans.grading_status === 'MANUALLY_GRADED') {
-      essayPoints += (ans.score_awarded || 0);
+      essayPoints += Number(ans.score_awarded || 0);
     }
   }
 

@@ -54,7 +54,9 @@ function enrichAssignment(assignment) {
     essayProgress,
     totalProgress,
     status,
-    durationMinutes: assignment.durationMinutes
+    durationMinutes: assignment.durationMinutes,
+    participantCount: Number(assignment.participantCount) || 0,
+    averageScore: Number(assignment.averageScore) ? Number(assignment.averageScore).toFixed(1) : 0
   }
 }
 

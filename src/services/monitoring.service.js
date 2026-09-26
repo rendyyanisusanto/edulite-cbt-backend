@@ -52,6 +52,7 @@ export async function getMonitoringSchedulesList(userId = null) {
       ce.status AS examStatus,
       sub.name AS subjectName,
       c.name AS className,
+      t.full_name AS teacherName,
       ces.start_at,
       ces.end_at,
       COALESCE(ces.duration_minutes, ce.duration_minutes) AS durationMinutes,
@@ -62,7 +63,7 @@ export async function getMonitoringSchedulesList(userId = null) {
     JOIN cbt_exams ce ON cea.exam_id = ce.id
     JOIN subjects sub ON cea.subject_id = sub.id
     JOIN classes c ON cea.class_id = c.id
-    ${userId !== null ? 'JOIN teachers t ON cea.teacher_id = t.id' : ''}
+    JOIN teachers t ON cea.teacher_id = t.id
     ${userId !== null ? 'WHERE t.user_id = ?' : ''}
     ORDER BY ces.start_at DESC, ces.id DESC
   `;
@@ -75,6 +76,7 @@ export async function getMonitoringSchedulesList(userId = null) {
     examTitle: row.examTitle,
     subjectName: row.subjectName,
     className: row.className,
+    teacherName: row.teacherName,
     startAt: formatISO(row.start_at),
     endAt: formatISO(row.end_at),
     durationMinutes: row.durationMinutes,

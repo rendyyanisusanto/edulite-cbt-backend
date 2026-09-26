@@ -145,6 +145,7 @@ export async function getStudentResultDetail(req, res, next) {
     // Get Detailed Answers
     const [answers] = await pool.query(`
       SELECT 
+        a.id AS answerId,
         a.exam_question_id AS questionId,
         q.question_type AS type,
         q.score AS maxScore,
@@ -161,6 +162,7 @@ export async function getStudentResultDetail(req, res, next) {
     `, [attemptInfo.attemptId]);
 
     const formattedAnswers = answers.map(ans => ({
+      answerId: ans.answerId,
       questionId: ans.questionId,
       studentAnswer: ans.type === 'SINGLE_CHOICE' ? ans.choiceKey : ans.essayText,
       isCorrect: ans.isCorrect === 1,

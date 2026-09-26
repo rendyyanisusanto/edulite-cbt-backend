@@ -9,6 +9,8 @@ export async function getTeacherAssignments(userId) {
            a.max_attempts as maxAttempts,
            (SELECT COUNT(*) FROM cbt_exam_questions q WHERE q.exam_assignment_id = a.id AND q.question_type = 'SINGLE_CHOICE') as choiceCount,
            (SELECT COUNT(*) FROM cbt_exam_questions q WHERE q.exam_assignment_id = a.id AND q.question_type = 'ESSAY') as essayCount,
+           (SELECT COUNT(DISTINCT cep.id) FROM cbt_exam_schedules ces JOIN cbt_exam_participants cep ON ces.id = cep.schedule_id WHERE ces.exam_assignment_id = a.id AND cep.is_eligible = 1) as participantCount,
+           (SELECT AVG(att.final_score) FROM cbt_exam_schedules ces JOIN cbt_exam_participants cep ON ces.id = cep.schedule_id JOIN cbt_attempts att ON cep.id = att.participant_id WHERE ces.exam_assignment_id = a.id AND att.status IN ('SUBMITTED', 'TIME_EXPIRED', 'COMPLETED')) as averageScore,
            t.full_name as teacherName, s.name as subjectName, c.name as className, 
            e.title as examName, e.code as examCode, e.exam_type as examType, e.status as examStatus,
            ay.name as academicYear, e.semester
@@ -33,6 +35,8 @@ export async function getTeacherAssignmentById(userId, assignmentId) {
            a.max_attempts as maxAttempts,
            (SELECT COUNT(*) FROM cbt_exam_questions q WHERE q.exam_assignment_id = a.id AND q.question_type = 'SINGLE_CHOICE') as choiceCount,
            (SELECT COUNT(*) FROM cbt_exam_questions q WHERE q.exam_assignment_id = a.id AND q.question_type = 'ESSAY') as essayCount,
+           (SELECT COUNT(DISTINCT cep.id) FROM cbt_exam_schedules ces JOIN cbt_exam_participants cep ON ces.id = cep.schedule_id WHERE ces.exam_assignment_id = a.id AND cep.is_eligible = 1) as participantCount,
+           (SELECT AVG(att.final_score) FROM cbt_exam_schedules ces JOIN cbt_exam_participants cep ON ces.id = cep.schedule_id JOIN cbt_attempts att ON cep.id = att.participant_id WHERE ces.exam_assignment_id = a.id AND att.status IN ('SUBMITTED', 'TIME_EXPIRED', 'COMPLETED')) as averageScore,
            t.full_name as teacherName, s.name as subjectName, c.name as className, 
            e.title as examName, e.code as examCode, e.exam_type as examType, e.status as examStatus,
            ay.name as academicYear, e.semester

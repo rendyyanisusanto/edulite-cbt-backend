@@ -163,7 +163,7 @@ router.post('/', async (req, res, next) => {
         late_tolerance_minutes, token, status, created_by, updated_by
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-      examAssignmentId, name || 'Reguler', startAt, endAt, durationMinutes,
+      examAssignmentId, name || 'Reguler', startAt ? new Date(startAt) : null, endAt ? new Date(endAt) : null, durationMinutes,
       lateToleranceMinutes || 0, token, status || 'SCHEDULED', userId, userId
     ])
 
@@ -296,7 +296,7 @@ router.put('/:id', async (req, res, next) => {
         status = COALESCE(?, status),
         updated_by = ?
       WHERE id = ?
-    `, [name, startAt, endAt, durationMinutes, lateToleranceMinutes, token, status, userId, id])
+    `, [name, startAt ? new Date(startAt) : null, endAt ? new Date(endAt) : null, durationMinutes, lateToleranceMinutes, token, status, userId, id])
 
     if (result.affectedRows === 0) {
       return response.error(res, 'Jadwal tidak ditemukan', 404)

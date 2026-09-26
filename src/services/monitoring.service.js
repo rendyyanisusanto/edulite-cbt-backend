@@ -32,6 +32,10 @@ function getEffectiveParticipantStatus(p, now, staleMinutes) {
     return 'IN_PROGRESS';
   }
   
+  if (p.attempt_status === 'PAUSED') {
+    return 'PAUSED';
+  }
+  
   return 'NOT_STARTED';
 }
 
@@ -368,4 +372,61 @@ export async function resetParticipantTime(scheduleId, participantId, userId = n
   `, [duration, participant.attempt_id]);
 
   return { message: 'Waktu ujian berhasil direset.' };
+}
+
+export async function toggleParticipantPause(scheduleId, participantId, userId = null) {
+  const params = [scheduleId, participantId];
+  if (userId !== null) {
+    params.push(userId);
+  }
+
+  const [rows] = await pool.query(`
+    SELECT 
+      cep.id AS participantId,
+      att.id AS attempt_id,
+      att.status AS attempt_status,
+      att.expires_at,
+      att.last_activity_at
+    FROM cbt_exam_participants cep
+    JOIN cbt_exam_schedules ces ON cep.schedule_id = ces.id
+    LEFT JOIN cbt_attempts att ON att.id = (
+      SELECT id FROM cbt_attempts 
+      WHERE participant_id = cep.id 
+      ORDER BY attempt_number DESC LIMIT 1
+    )
+    ${userId !== null ? 'JOIN cbt_exam_assignments cea ON ces.exam_assignment_id = cea.id JOIN teachers t ON cea.teacher_id = t.id' : ''}
+    WHERE ces.id = ? AND cep.id = ? ${userId !== null ? 'AND t.user_id = ?' : ''}
+  `, params);
+
+  if (rows.length === 0) {
+    throw { status: 404, message: 'Peserta tidak ditemukan atau Anda tidak memiliki akses.' };
+  }
+
+  const participant = rows[0];
+  if (!participant.attempt_id) {
+    throw { status: 400, message: 'Peserta belum memulai ujian.' };
+  }
+
+  if (participant.attempt_status === 'IN_PROGRESS') {
+    // Pause it
+    await pool.query(`
+      UPDATE cbt_attempts 
+      SET status = 'PAUSED', last_activity_at = NOW()
+      WHERE id = ?
+    `, [participant.attempt_id]);
+    return { message: 'Waktu ujian berhasil dipause.' };
+  } else if (participant.attempt_status === 'PAUSED') {
+    // Resume it
+    // Increase expires_at by the time elapsed since last_activity_at (which is when it was paused)
+    await pool.query(`
+      UPDATE cbt_attempts 
+      SET expires_at = DATE_ADD(expires_at, INTERVAL TIMESTAMPDIFF(SECOND, last_activity_at, NOW()) SECOND),
+          status = 'IN_PROGRESS',
+          last_activity_at = NOW()
+      WHERE id = ?
+    `, [participant.attempt_id]);
+    return { message: 'Waktu ujian berhasil dilanjutkan (resume).' };
+  } else {
+    throw { status: 400, message: 'Tidak dapat melakukan pause/resume pada status ujian ini.' };
+  }
 }

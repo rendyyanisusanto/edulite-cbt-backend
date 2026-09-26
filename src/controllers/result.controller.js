@@ -147,8 +147,11 @@ export async function getStudentResultDetail(req, res, next) {
       SELECT 
         a.exam_question_id AS questionId,
         q.question_type AS type,
+        q.score AS maxScore,
         a.is_correct AS isCorrect,
         a.answer_text AS essayText,
+        a.score_awarded AS scoreAwarded,
+        a.grading_status AS gradingStatus,
         o.option_key AS choiceKey
       FROM cbt_answers a
       JOIN cbt_exam_questions q ON a.exam_question_id = q.id
@@ -160,7 +163,10 @@ export async function getStudentResultDetail(req, res, next) {
     const formattedAnswers = answers.map(ans => ({
       questionId: ans.questionId,
       studentAnswer: ans.type === 'SINGLE_CHOICE' ? ans.choiceKey : ans.essayText,
-      isCorrect: ans.isCorrect === 1
+      isCorrect: ans.isCorrect === 1,
+      gradingStatus: ans.gradingStatus,
+      scoreAwarded: ans.scoreAwarded,
+      maxScore: ans.maxScore
     }));
 
     response.success(res, {

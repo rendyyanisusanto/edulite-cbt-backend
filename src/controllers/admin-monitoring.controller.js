@@ -1,5 +1,5 @@
 import { response } from '../utils/response.js'
-import { getMonitoringSchedulesList, getMonitoringScheduleDetail, getMonitoringParticipantDetail, resetParticipantTime as resetParticipantTimeService } from '../services/monitoring.service.js'
+import { getMonitoringSchedulesList, getMonitoringScheduleDetail, getMonitoringParticipantDetail, resetParticipantTime as resetParticipantTimeService, toggleParticipantPause as toggleParticipantPauseService } from '../services/monitoring.service.js'
 
 export async function getMonitoringSchedules(req, res, next) {
   try {
@@ -57,3 +57,18 @@ export async function resetParticipantTime(req, res, next) {
     next(err);
   }
 }
+
+export async function toggleParticipantPause(req, res, next) {
+  try {
+    const { scheduleId, participantId } = req.params;
+    const data = await toggleParticipantPauseService(scheduleId, participantId);
+    
+    return response.success(res, {
+      message: data.message,
+      data
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+

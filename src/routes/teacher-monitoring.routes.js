@@ -12,5 +12,6 @@ router.get('/', monitorController.getMonitoringSchedules)
 router.get('/:scheduleId', monitorController.getMonitoringDetail)
 router.get('/:scheduleId/participants/:participantId', monitorController.getParticipantDetail)
 router.post('/:scheduleId/participants/:participantId/reset-time', monitorController.resetParticipantTime)
+router.post('/:scheduleId/participants/:participantId/toggle-pause', monitorController.toggleParticipantPause)
 
 export default router

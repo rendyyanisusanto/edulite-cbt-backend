@@ -28,6 +28,18 @@ export async function createAssignment(req, res, next) {
   }
 }
 
+export async function createBulkAssignments(req, res, next) {
+  try {
+    const data = await assignmentService.createBulkAssignments(req.params.examId, req.body, req.user.sub)
+    const msg = data.skippedCount > 0
+      ? `${data.createdCount} penugasan berhasil dibuat (${data.skippedCount} sudah ada dilewati)`
+      : `${data.createdCount} penugasan berhasil dibuat`
+    response.success(res, { statusCode: 201, message: msg, data })
+  } catch (err) {
+    next(err)
+  }
+}
+
 export async function updateAssignment(req, res, next) {
   try {
     const data = await assignmentService.updateAssignment(req.params.id, req.body, req.user.sub)

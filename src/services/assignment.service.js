@@ -42,6 +42,30 @@ export async function createAssignment(examId, data, userId) {
   return await getAssignmentById(insertId)
 }
 
+export async function createBulkAssignments(examId, data, userId) {
+  const uniqueSubjectIds = [...new Set(data.subjectIds)]
+  const uniqueClassIds = [...new Set(data.classIds)]
+
+  const { insertedIds, skippedCount } = await assignmentRepo.createBulkAssignments(
+    examId,
+    {
+      teacherId: data.teacherId,
+      subjectIds: uniqueSubjectIds,
+      classIds: uniqueClassIds,
+      targetChoiceQuestions: data.targetChoiceQuestions,
+      targetEssayQuestions: data.targetEssayQuestions
+    },
+    userId
+  )
+
+  const created = await Promise.all(insertedIds.map((id) => getAssignmentById(id)))
+  return {
+    created,
+    createdCount: created.length,
+    skippedCount
+  }
+}
+
 export async function updateAssignment(id, data, userId) {
   const assignment = await assignmentRepo.getAssignmentById(id)
   if (!assignment) throw { status: 404, message: 'Assignment not found' }

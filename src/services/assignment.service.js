@@ -43,17 +43,11 @@ export async function createAssignment(examId, data, userId) {
 }
 
 export async function createBulkAssignments(examId, data, userId) {
-  const uniqueSubjectIds = [...new Set(data.subjectIds)]
-  const uniqueClassIds = [...new Set(data.classIds)]
-
   const { insertedIds, skippedCount } = await assignmentRepo.createBulkAssignments(
     examId,
     {
       teacherId: data.teacherId,
-      subjectIds: uniqueSubjectIds,
-      classIds: uniqueClassIds,
-      targetChoiceQuestions: data.targetChoiceQuestions,
-      targetEssayQuestions: data.targetEssayQuestions
+      items: data.items
     },
     userId
   )

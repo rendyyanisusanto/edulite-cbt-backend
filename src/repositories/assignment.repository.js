@@ -86,7 +86,7 @@ export async function createAssignment(examId, data, userId) {
 }
 
 export async function createBulkAssignments(examId, data, userId) {
-  const { teacherId, subjectIds, classIds, targetChoiceQuestions, targetEssayQuestions } = data
+  const { teacherId, items } = data
   const connection = await pool.getConnection()
   try {
     await connection.beginTransaction()
@@ -100,22 +100,23 @@ export async function createBulkAssignments(examId, data, userId) {
     const insertedIds = []
     let skippedCount = 0
 
-    for (const subjectId of subjectIds) {
-      for (const classId of classIds) {
-        if (existingSet.has(`${subjectId}:${classId}`)) {
-          skippedCount++
-          continue
-        }
-        const [result] = await connection.execute(
-          `INSERT INTO cbt_exam_assignments (
-            exam_id, teacher_id, subject_id, class_id,
-            target_choice_questions, target_essay_questions,
-            created_by
-          ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [examId, teacherId, subjectId, classId, targetChoiceQuestions, targetEssayQuestions, userId]
-        )
-        insertedIds.push(result.insertId)
+    for (const item of items) {
+      const key = `${item.subjectId}:${item.classId}`
+      if (existingSet.has(key)) {
+        skippedCount++
+        continue
       }
+      existingSet.add(key)
+
+      const [result] = await connection.execute(
+        `INSERT INTO cbt_exam_assignments (
+          exam_id, teacher_id, subject_id, class_id,
+          target_choice_questions, target_essay_questions,
+          created_by
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [examId, teacherId, item.subjectId, item.classId, item.targetChoiceQuestions, item.targetEssayQuestions, userId]
+      )
+      insertedIds.push(result.insertId)
     }
 
     await connection.commit()

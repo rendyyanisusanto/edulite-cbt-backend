@@ -22,13 +22,17 @@ const assignmentSchema = z.object({
 
 const bulkAssignmentSchema = z.object({
   teacherId: z.number({ required_error: 'Guru wajib dipilih' }),
-  subjectIds: z.array(z.number()).min(1, 'Minimal pilih 1 mata pelajaran'),
-  classIds: z.array(z.number()).min(1, 'Minimal pilih 1 kelas'),
-  targetChoiceQuestions: z.number({ required_error: 'Target soal PG wajib diisi' }).min(0, 'Minimal 0'),
-  targetEssayQuestions: z.number({ required_error: 'Target soal Essay wajib diisi' }).min(0, 'Minimal 0')
-}).refine(data => data.targetChoiceQuestions + data.targetEssayQuestions > 0, {
-  message: 'Total target soal harus lebih dari 0',
-  path: ['targetChoiceQuestions']
+  items: z.array(
+    z.object({
+      classId: z.number({ required_error: 'Kelas wajib dipilih' }),
+      subjectId: z.number({ required_error: 'Mata pelajaran wajib dipilih' }),
+      targetChoiceQuestions: z.number({ required_error: 'Target soal PG wajib diisi' }).min(0, 'Minimal 0'),
+      targetEssayQuestions: z.number({ required_error: 'Target soal Essay wajib diisi' }).min(0, 'Minimal 0')
+    }).refine(item => item.targetChoiceQuestions + item.targetEssayQuestions > 0, {
+      message: 'Total target soal harus lebih dari 0',
+      path: ['targetChoiceQuestions']
+    })
+  ).min(1, 'Minimal tambahkan 1 baris penugasan')
 })
 
 // These paths are mounted at /api
